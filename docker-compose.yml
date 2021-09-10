@@ -1,0 +1,14 @@
+version: '2'
+services:
+  unms:
+    build: https://github.com/Leor47/docker-unms.git
+    container_name: unms_mam
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+      - 2055:2055/udp
+    environment:
+      - TZ=America/Costa_Rica
+    volumes:
+      - ./volumes/unms:/config
