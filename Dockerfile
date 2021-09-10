@@ -16,6 +16,10 @@ RUN set -x \
     && apk add --no-cache redis certbot gzip bash vim dumb-init openssl libcap sudo \
        pcre pcre2 yajl gettext coreutils make argon2-libs erlang jq vips tar xz \
        libzip gmp icu c-client supervisor libuv su-exec cifs-utils
+# mount cifs fileshare #
+RUN set -x \
+&& mount -t cifs //greendatastore.file.core.windows.net/uisp /mnt/uisp -o vers=3.0,username=greendatastore,password=B/ydqaQ9qoj1mJ/DisoNbvinMp3Z96YOVYdonzhXqYoa0tSUMvXO9KgaE5nM32mCozFP15gn7ucMI0tDyBt62Q==,dir_mode=0777,file_mode=0777,serverino,mfsymlinks
+# This format for storing symlinks on SMB shares 
 
 # start unms #
 RUN mkdir -p /home/app/unms \
