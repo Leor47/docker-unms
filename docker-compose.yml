@@ -2,7 +2,10 @@ version: '2'
 services:
   unms:
     build: https://github.com/Leor47/docker-unms.git
-    container_name: unms_mam
+    image: clouduisp.azurecr.io/unms 
+    container_name: unms
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
     restart: always
     ports:
       - 80:80
@@ -11,4 +14,10 @@ services:
     environment:
       - TZ=America/Costa_Rica
     volumes:
-      - ./volumes/unms:/config
+     - unms:/config
+volumes:
+  unms:
+    driver: azure_file
+    driver_opts:
+      share_name: uisp
+      storage_account_name: greendatastore
