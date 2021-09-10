@@ -4,8 +4,8 @@ FROM ubnt/unms-netflow:1.3.10 as unms-netflow
 FROM ubnt/unms-crm:3.3.10 as unms-crm
 FROM ubnt/unms-siridb:1.3.10 as unms-siridb
 FROM rabbitmq:3.7.14-alpine as rabbitmq
-
 FROM nico640/s6-alpine-node:12.18.4-3.12
+FROM ubuntu:20.10
 
 # base deps postgres 9.6, redis, certbot
 RUN set -x \
@@ -15,6 +15,9 @@ RUN set -x \
     && apk add --no-cache redis certbot gzip bash vim dumb-init openssl libcap sudo \
        pcre pcre2 yajl gettext coreutils make argon2-libs erlang jq vips tar xz \
        libzip gmp icu c-client supervisor libuv su-exec
+
+#CIFS UTILS FOR AZURE#
+RUN apt-get update -y && apt-get install -y cifs-utils
 
 # start unms #
 RUN mkdir -p /home/app/unms \
