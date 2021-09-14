@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: unms
   name: unms
+  namespace: isp
 spec:
   replicas: 1
   selector:
@@ -14,7 +14,6 @@ spec:
     type: Recreate
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: unms
     spec:
@@ -27,28 +26,55 @@ spec:
         name: unms
         ports:
         - containerPort: 80
+          protocol: TCP
         - containerPort: 443
+          protocol: TCP
         - containerPort: 2055
           protocol: UDP
         resources: {}
         volumeMounts:
         - mountPath: /config
-          name: dockerunms-uisp-volume
+          name: uisp-volume
       restartPolicy: Always
       serviceAccountName: ""
       volumes:
-      - name: dockerunms-uisp-volume
+      - name: uisp-volume
         persistentVolumeClaim:
-          claimName: dockerunms-uisp-volume
+          claimName: uisp-volume
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: uisp-volume
+  namespace: isp
+provisioner: kubernetes.io/azure-disk
+reclaimPolicy: Retain
+parameters:
+  storageaccounttype: Standard_LRS
+  kind: Managed
 ---
 apiVersion: v1
-kind: Service
+kind: PersistentVolumeClaim
 metadata:
   labels:
-    app: unms
-  name: unms
+    app: uisp-volume
+  name: uisp-volume
+  namespace: isp
 spec:
-  type: LoadBalancer
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 16Gi
+---
+apiVersion: v1
+kind: ClusterIP
+metadata:
+  name: unms
+  namespace: isp
+spec:
+  selector:
+    app: unms
   ports:
   - name: "80"
     port: 80
@@ -56,26 +82,3 @@ spec:
   - name: "443"
     port: 443
     targetPort: 443
-  - name: "2055"
-    port: 2055
-    protocol: UDP
-    targetPort: 2055
-  selector:
-    app: unms
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  creationTimestamp: null
-  labels:
-    app: dockerunms-uisp-volume
-  name: dockerunms-uisp-volume
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 100Mi
-
-
-  
