@@ -68,11 +68,12 @@ spec:
       storage: 16Gi
 ---
 apiVersion: v1
-kind: ClusterIP
+kind: Service
 metadata:
   name: unms
   namespace: isp
 spec:
+  type: ClusterIP
   selector:
     app: unms
   ports:
