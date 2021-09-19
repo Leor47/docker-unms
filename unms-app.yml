@@ -4,7 +4,7 @@ metadata:
   labels:
     app: unms
   name: unms
-  namespace: isp
+  namespace: uisp
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        app: unms
+        app: unms      
     spec:
       containers:
       - env:
@@ -31,38 +31,55 @@ spec:
           protocol: TCP
         - containerPort: 2055
           protocol: UDP
-        resources: {}
         volumeMounts:
         - mountPath: /config
-          name: uisp-volume
+          name: uisp-volume-pod
       restartPolicy: Always
       serviceAccountName: ""
       volumes:
-      - name: uisp-volume
-        persistentVolumeClaim:
-          claimName: uisp-volume
----
-kind: StorageClass
+        - name: uisp-volume-pod
+          persistentVolumeClaim:
+            claimName: uisp-disk-pvc
+---     
 apiVersion: storage.k8s.io/v1
+kind: StorageClass
 metadata:
-  name: uisp-volume
-  namespace: isp
+  name: static-disk
+  namespace: uisp
 provisioner: kubernetes.io/azure-disk
 reclaimPolicy: Retain
-parameters:
-  storageaccounttype: Standard_LRS
-  kind: Managed
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: uisp-disk-pv
+  namespace: uisp  
+spec:
+  capacity:
+    storage: 16Gi
+  storageClassName: static-disk
+  claimRef:
+    name: uisp-disk-pvc
+    namespace: uisp
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  azureDisk:
+    kind: Managed
+    diskName: uisp-disk
+    diskURI: /subscriptions/773ff44c-9f7e-4137-abab-4d4c5c6bd073/resourceGroups/MC_isp_ispCluster_eastus/providers/Microsoft.Compute/disks/uisp-disk
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  labels:
-    app: uisp-volume
-  name: uisp-volume
-  namespace: isp
+  name: uisp-disk-pvc
+  namespace: uisp
 spec:
+  storageClassName: static-disk
+  volumeName: uisp-disk-pv
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 16Gi
@@ -70,10 +87,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: unms
-  namespace: isp
-spec:
-  type: ClusterIP
+  name: unms-service
+  namespace: uisp
+spec:  
   selector:
     app: unms
   ports:
@@ -83,3 +99,8 @@ spec:
   - name: "443"
     port: 443
     targetPort: 443
+  - name: "2055"
+    port: 2055
+    protocol: UDP
+    targetPort: 2055
+  type: ClusterIP
